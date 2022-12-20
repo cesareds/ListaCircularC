@@ -32,11 +32,9 @@ void inserirNoFim(Lista *lista, int valor){
             lista->ultimo=novo;
             lista->ultimo->proximo=lista->primeiro;
         } else{
-            aux=lista->primeiro;
-            while (aux->proximo){
-                aux=aux->proximo;
-            }
-            aux->proximo=novo;
+            lista->ultimo->proximo=novo;
+            lista->ultimo=novo;
+            lista->ultimo->proximo=lista->primeiro;
         }
         lista->tamanho++;
     } else{
@@ -68,20 +66,22 @@ void inserirOrdenado(Lista *lista, int valor){
     if(novo){
         novo->valor=valor;
         if(lista->primeiro==NULL){
-            novo->proximo=NULL;
-            lista->primeiro=novo;
+            inserirNoInicio(lista, valor);
         } else if(novo->valor < lista->primeiro->valor){
-            novo->proximo=lista->primeiro;
-            lista->primeiro=novo;
+            inserirNoInicio(lista, valor);
         } else{
             aux=lista->primeiro;
-            while (aux->proximo && novo->valor > aux->proximo->valor){
+            while (aux->proximo != lista->primeiro && novo->valor > aux->proximo->valor){
                 aux=aux->proximo;
             }
-            novo->proximo=aux->proximo;
-            aux->proximo=novo;
+            if(aux->proximo==lista->primeiro){
+                inserirNoFim(lista, valor);
+            } else{
+                novo->proximo=aux->proximo;
+                aux->proximo=novo;
+                lista->tamanho++;
+            }
         }
-        lista->tamanho++;
     } else{
         printf("\nErro ao alocar memória!\n");
     }
@@ -89,18 +89,30 @@ void inserirOrdenado(Lista *lista, int valor){
 No *remover(Lista *lista, int valor){
     No *aux, *aSerRemovido = NULL;
     if(lista->primeiro){
-        if(lista->primeiro->valor==valor){
+        if(lista->primeiro==lista->ultimo && lista->primeiro->valor==valor){
+            aSerRemovido = lista->primeiro;
+            lista->primeiro=NULL;
+            lista->ultimo=NULL;
+            lista->tamanho--;
+        }else if(lista->primeiro->valor==valor){
             aSerRemovido = lista->primeiro;
             lista->primeiro=aSerRemovido->proximo;
+            lista->ultimo->proximo=lista->primeiro;
             lista->tamanho--;
         } else{
             aux = lista->primeiro;
-            while (aux->proximo && aux->proximo->valor!=valor){
+            while (aux->proximo != lista->primeiro && aux->proximo->valor!=valor){
                 aux = aux->proximo;
             }
-            if(aux->proximo){
-                aSerRemovido = aux->proximo;
-                aux->proximo=aSerRemovido->proximo;
+            if(aux->proximo->valor==valor){
+                if(lista->ultimo==aux->proximo){
+                    aSerRemovido = aux->proximo;
+                    aux->proximo = aSerRemovido->proximo;
+                    lista->ultimo=aux;
+                } else{
+                    aSerRemovido = aux->proximo;
+                    aux->proximo = aSerRemovido->proximo;
+                }
                 lista->tamanho--;
             } else{
                 printf("\nValor não encontrado\n");
@@ -112,23 +124,27 @@ No *remover(Lista *lista, int valor){
     return aSerRemovido;
 }
 No *buscar(Lista *lista, int valor){
-    No *aux, *no = NULL;
-    aux=lista->primeiro;
-    while (aux && aux->valor!=valor){
-        aux=aux->proximo;
-    }
+    No *aux = lista->primeiro;
     if(aux){
-        no = aux;
+        do{
+            if(aux->valor==valor){
+                return aux;
+            }
+            aux=aux->proximo;
+        } while (aux!=lista->primeiro);
     }
-    return no;
+    return NULL;
 }
 void imprimir(Lista lista){
     printf("\nLista\n");
     printf("\n------Tamanho: %i----------\n", lista.tamanho);
     No *aux = lista.primeiro;
-    while (aux){
-        printf(" %i", aux->valor);
-        aux=aux->proximo;
+    if(aux){
+        do{
+            printf("%i\t", aux->valor);
+            aux=aux->proximo;
+        } while (aux!=lista.primeiro);
+        printf("\ninício:\t%i", aux->valor);
     }
     printf("\n--------FimLista----------\n");
 }
